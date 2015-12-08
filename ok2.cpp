@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <iomanip>
 #include <cstring>
+#include <stdlib.h>
+#include <time.h>
 
 using namespace std;
 using namespace std::chrono;
@@ -47,6 +49,8 @@ public:
 int vehiclesNumber;
 int vehiclesCapacity;
 double routesLength = 0;
+
+
 
 vector<Customer> customersVector;
 
@@ -271,6 +275,15 @@ vector<Route> performMove1(vector<Route> routes){
 
 vector<Route> performMove2(vector<Route> routes){
 
+    int i=rand()%routes.size();
+    int j=rand()% routes.size();
+
+    int k=rand()%routes.at(i).route.size();
+    int l=rand()%routes.at(j).route.size();
+
+    routes.at(i).route.insert(routes.at(i).route.begin()+k,routes.at(j).route.at(l));
+    routes.at(j).route.erase(routes.at(j).route.begin()+l);
+
     return routes;
 }
 
@@ -286,13 +299,24 @@ vector<Route> performMove4(vector<Route> routes){
 
 //Stworzenie nowych drog przez wykonanie jednej ze zmian
 vector<Route> performMoves(vector<Route> routes){
+
+
+    routes=performMove2(routes);
     return routes;
 }
 
 double routesDistance(vector<Route> routes){
 
     double distanceSum=0;
+    double distance;
 
+    for(auto r:routes){
+        distance=isConnectionFeasible(r);
+        if(distance==-1){
+            return -1;
+        }
+        distanceSum+=distance;
+    }
 
     return distanceSum;
 
@@ -301,29 +325,57 @@ double routesDistance(vector<Route> routes){
 
 bool decision(double currentDistance, double tempDistance, double temperature){
 
-    bool doItOrNot=true;
+    bool doItOrNot=false;
+    double k=25;
+
+    double prob;
+    double random;
+
+    random=(rand()%101)/100;
+    prob=1/(exp((((tempDistance-currentDistance)*25))/(currentDistance*temperature)));
+
+    if(prob>random){
+        doItOrNot=true;
+    }
 
     return doItOrNot; // just do it!
 }
 
 
-vector<Route> performAnnealing(vector<Route> routes, double startTemperature, double endTemperature, double coolingFactor, int innerIterations){
+vector<Route> performAnnealing(vector<Route> routes, double startTemperature, double endTemperature, double coolingFactor, int innerIterations, vector<Route> bestRoutes){
 
     double temperature=startTemperature;
     vector<Route> tempRoutes;
+    double bestDistance=routesDistance(bestRoutes);
+    double currentDistance=routesDistance(routes);
+    double tempDistance;
 
     while(temperature>endTemperature){
+
         for(int h=0;h<innerIterations;h++){
+
             tempRoutes=performMoves(routes);
+            printRoutes(tempRoutes);
+            tempDistance=routesDistance(tempRoutes);
+            cout<<endl;
 
-            double currentDistance=routesDistance(routes);
-            double tempDistance=routesDistance(tempRoutes);
+            //cout<<"TUTAJ"<<endl;
 
-            if(currentDistance>tempDistance){
-                routes=tempRoutes;
-            }
-            else if(decision(currentDistance,tempDistance, temperature)==1){
-                routes=tempRoutes;
+            if(tempDistance!=-1){
+
+                if(currentDistance>tempDistance){
+                    routes=tempRoutes;
+                    currentDistance=tempDistance;
+                    if(currentDistance<bestDistance){
+                        bestRoutes=routes;
+                        bestDistance=currentDistance;
+                    }
+                }
+                else if(decision(currentDistance,tempDistance, temperature)){
+                    routes=tempRoutes;
+                    currentDistance=tempDistance;
+                }
+
             }
 
         }
@@ -363,6 +415,8 @@ void save(char *name, unordered_map<int, Route> routes) {
 
 int main(int argc, char *argv[]) {
 
+    srand (time(NULL));
+
     //Domyslna nazwa pliku wynikowego
     string defaultOutFileName="wynik.txt";
     char *cdefaultOutFileName = new char[defaultOutFileName.length() + 1];
@@ -394,19 +448,23 @@ int main(int argc, char *argv[]) {
         data_input_n(fileName, ile);
 
     vector<Route> routes;
+    vector<Route> bestRoutes;
 
 
 
     routes=createNaiveRoutes();
+    bestRoutes=routes;
 
     printRoutes(routes);
 
-    //performAnnealing(routes, 0.8, 0.01, 0.995, 6000);
+
+
+    performAnnealing(routes, 0.8, 0.01, 0.995, 6000,bestRoutes);
 
     //Wlaczanie kontrolnego wypisywania vectora
     //print_customersVector(customersVector);
 
-    /*
+/*
     try {
         for (pair<int, Route> i: routes) {
             Route x = i.second;
@@ -427,17 +485,18 @@ int main(int argc, char *argv[]) {
         Route x = i.second;
         sum += isConnectionFeasible(x);
     }
-     */
+    */
+
 
     //Wyswietlanie wynikow dzialania algorytmu na stdout
-    /*
-    printf("%lu %0.5f\n", routes.size(), sum);
+
+    //printf("%lu %0.5f\n", routes.size(), sum);
 
     printRoutes(routes);
 
-    if (outFileName != nullptr)
-        save(outFileName, routes);
+    //if (outFileName != nullptr)
+    //   save(outFileName, routes);
 
-        */
+
     return 0;
 }
