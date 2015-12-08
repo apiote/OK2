@@ -331,8 +331,13 @@ bool decision(double currentDistance, double tempDistance, double temperature){
     double prob;
     double random;
 
-    random=(rand()%101)/100;
+   //cout<<"TUTAJ"<<endl;
+
+    random=(rand()%101)/100.00;
     prob=1/(exp((((tempDistance-currentDistance)*25))/(currentDistance*temperature)));
+
+    cout<<random<<endl;
+    cout<<prob<<endl<<endl;
 
     if(prob>random){
         doItOrNot=true;
@@ -355,11 +360,7 @@ vector<Route> performAnnealing(vector<Route> routes, double startTemperature, do
         for(int h=0;h<innerIterations;h++){
 
             tempRoutes=performMoves(routes);
-            printRoutes(tempRoutes);
             tempDistance=routesDistance(tempRoutes);
-            cout<<endl;
-
-            //cout<<"TUTAJ"<<endl;
 
             if(tempDistance!=-1){
 
