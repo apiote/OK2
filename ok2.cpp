@@ -323,6 +323,37 @@ vector<Route> performMove2(vector<Route> routes){
 }
 
 vector<Route> performMove3(vector<Route> routes){
+	int S=1000000;
+	int At=-1;
+	int i=0;
+	for(auto R: routes){
+		int s = R.route.size();
+		if(s<S){ S=s; At=i; }
+		++i;
+	}
+	uniform_int_distribution<int> irand(0,routes.size()-1);
+    int p = irand(rng);
+	if(p==At){
+		uniform_int_distribution<int> jrand(0, 1);
+		int k = jrand(rng);
+		p+=(2*k)-1;
+	}
+	
+	uniform_int_distribution<int> krand(1,routes.at(At).route.size()-2);
+    int l=krand(rng);
+
+
+    uniform_int_distribution<int> lrand(1,routes.at(p).route.size()-2);
+    int k=lrand(rng);
+
+
+
+    routes.at(p).route.insert(routes.at(p).route.begin()+k,routes.at(At).route.at(l));
+    routes.at(At).route.erase(routes.at(At).route.begin()+l);
+
+    if(routes.at(At).route.front().id==0 && routes.at(At).route.back().id==0 && routes.at(At).route.size()==2)
+        routes.erase(routes.begin()+At);
+
 
     return routes;
 }
@@ -334,14 +365,14 @@ vector<Route> performMove4(vector<Route> routes){
 
 //Stworzenie nowych drog przez wykonanie jednej ze zmian
 vector<Route> performMoves(vector<Route> routes){
-	uniform_int_distribution<int> irand(1, 2); //1, 4
+	uniform_int_distribution<int> irand(1, 3); //1, 4
 	int r = irand(rng);
 	
 	switch(r){
 		case 1:
 			return performMove1(routes);
 		case 2:
-			return preformMove2(routes);
+			return performMove2(routes);
 		case 3:
 			return performMove3(routes);
 		case 4:
