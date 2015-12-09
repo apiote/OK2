@@ -399,23 +399,22 @@ vector<Route> performAnnealing(vector<Route> routes, double startTemperature, do
     return bestRoutes;
 }
 
-void save(char *name, unordered_map<int, Route> routes) {
+void save(char *name, vector<Route> routes) {
     ofstream o;
     o.open(name, ofstream::out | ofstream::trunc);
     if (routes.empty())
         o << "-1\n";
     else {
         double sum = 0;
-        for (pair<int, Route> i: routes) {
-            Route x = i.second;
-            sum += isConnectionFeasible(x);
+        for (auto i: routes) {
+            sum += isConnectionFeasible(i);
         }
         o<<routes.size()<<" "<< fixed << setprecision(5)<<sum<<endl;
 
         if (routes.empty())
             cout << "-1";
         for (auto route:routes) {
-            vector<Customer> r = route.second.route;
+            vector<Customer> r = route.route;
             for (unsigned long i = 1; i < r.size() - 1; ++i) {
                 o<<r.at(i).id<<" ";
             }
@@ -487,11 +486,10 @@ int main(int argc, char *argv[]) {
     //Wlaczanie kontrolnego wypisywania vectora
     //print_customersVector(customersVector);
 
-/*
+
     try {
-        for (pair<int, Route> i: routes) {
-            Route x = i.second;
-            if (isConnectionFeasible(x) == -1) {
+        for (auto i: routes){
+            if (isConnectionFeasible(i) == -1) {
                 throw -1;
             }
         }
@@ -504,11 +502,9 @@ int main(int argc, char *argv[]) {
     }
 
     double sum = 0;
-    for (pair<int, Route> i: routes) {
-        Route x = i.second;
-        sum += isConnectionFeasible(x);
+    for (auto i: routes) {
+        sum += isConnectionFeasible(i);
     }
-    */
 
 
     //Wyswietlanie wynikow dzialania algorytmu na stdout
@@ -518,7 +514,7 @@ int main(int argc, char *argv[]) {
     //printRoutes(routes);
 
     //if (outFileName != nullptr)
-    //   save(outFileName, routes);
+       save(outFileName, routes);
 
 
     return 0;
