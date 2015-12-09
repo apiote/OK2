@@ -10,6 +10,7 @@
 #include <cstring>
 #include <stdlib.h>
 #include <time.h>
+#include <random>
 
 using namespace std;
 using namespace std::chrono;
@@ -49,6 +50,9 @@ public:
 int vehiclesNumber;
 int vehiclesCapacity;
 double routesLength = 0;
+
+random_device rd;
+mt19937 rng(rd());
 
 
 
@@ -226,7 +230,6 @@ vector<Route> createNaiveRoutes(){
     //Tworzenie drog magazyn - klient - magazyn
     for(int i=1;i<customersVector.size();i++){
         used[i]=false;
-        //tempRoute={customersVector.at(0), customersVector.at(i), customersVector.at(0)};
         tempRoute.route.push_back(customersVector.at(0));
         tempRoute.route.push_back(customersVector.at(i));
         tempRoute.route.push_back(customersVector.at(0));
@@ -240,33 +243,33 @@ vector<Route> createNaiveRoutes(){
 
     //Naiwne laczenie drog
     for(int j=0;j<routes.size();j++){
-        if(!removed[j]){
+        if(!used[j+1]){
             for(int i=1;i<customersVector.size();i++){
                 tempRoute=routes.at(j);
-                //printRoute(tempRoute);
                 tempRoute.route.insert(tempRoute.route.end()-1,customersVector.at(i));
-                //printRoute(tempRoute);
                 if(!used[i] && isConnectionFeasible(tempRoute)!=-1){
-                    //tempRoute.route.insert(tempRoute.route.end()-1,customersVector.at(i));
                     routes.at(j)=tempRoute;
-                    removed[i]=true;
-                    //routes.erase(routes.begin()+i);
                     used[i]=true;
+                    used[j+1]=true;
+                    removed[i-1]=true;
                 }
             }
         }
         }
 
     //Usuwanie drog zawierajacych uzyte wierzcholki
-    for(int j=0;j<routes.size();j++){
-        if(removed[j]){
-            routes.erase(routes.begin()+j);
-        }
+    for(int j=routes.size()-1;j>=0;j--) {
+       if (removed[j]) {
+            routes.erase(routes.begin() + j);
+           }
     }
+
 
 return routes;
 
 }
+
+
 
 vector<Route> performMove1(vector<Route> routes){
 
@@ -275,14 +278,23 @@ vector<Route> performMove1(vector<Route> routes){
 
 vector<Route> performMove2(vector<Route> routes){
 
-    int i=rand()%routes.size();
-    int j=rand()% routes.size();
+    uniform_int_distribution<int> irand(0,routes.size()-1);
 
-    int k=rand()%routes.at(i).route.size();
-    int l=rand()%routes.at(j).route.size();
+    int i = irand(rng);
+    int j = irand(rng);
+
+
+    uniform_int_distribution<int> krand(1,routes.at(i).route.size()-2);
+    int k=krand(rng);
+
+    uniform_int_distribution<int> lrand(1,routes.at(j).route.size()-2);
+    int l=lrand(rng);
 
     routes.at(i).route.insert(routes.at(i).route.begin()+k,routes.at(j).route.at(l));
     routes.at(j).route.erase(routes.at(j).route.begin()+l);
+
+    if(routes.at(j).route.front().id==0 && routes.at(j).route.back().id==0 && routes.at(j).route.size()==2)
+        routes.erase(routes.begin()+j);
 
     return routes;
 }
@@ -331,10 +343,8 @@ bool decision(double currentDistance, double tempDistance, double temperature){
     double prob;
     double random;
 
-   //cout<<"TUTAJ"<<endl;
-
     random=(rand()%101)/100.00;
-    prob=1/(exp((((tempDistance-currentDistance)*25))/(currentDistance*temperature)));
+    prob=1.0/(exp((((tempDistance-currentDistance)*25))/(currentDistance*temperature)));
 
     cout<<random<<endl;
     cout<<prob<<endl<<endl;
@@ -351,8 +361,9 @@ vector<Route> performAnnealing(vector<Route> routes, double startTemperature, do
 
     double temperature=startTemperature;
     vector<Route> tempRoutes;
-    double bestDistance=routesDistance(bestRoutes);
+
     double currentDistance=routesDistance(routes);
+    double bestDistance=currentDistance;
     double tempDistance;
 
     while(temperature>endTemperature){
@@ -385,7 +396,7 @@ vector<Route> performAnnealing(vector<Route> routes, double startTemperature, do
     }
 
 
-    return routes;
+    return bestRoutes;
 }
 
 void save(char *name, unordered_map<int, Route> routes) {
@@ -417,6 +428,7 @@ void save(char *name, unordered_map<int, Route> routes) {
 int main(int argc, char *argv[]) {
 
     srand (time(NULL));
+    random_device rd;
 
     //Domyslna nazwa pliku wynikowego
     string defaultOutFileName="wynik.txt";
@@ -458,9 +470,19 @@ int main(int argc, char *argv[]) {
 
     printRoutes(routes);
 
+    cout<<endl<<endl;
 
 
-    performAnnealing(routes, 0.8, 0.01, 0.995, 6000,bestRoutes);
+    routes=performAnnealing(routes, 0.8, 0.01, 0.995, 60,bestRoutes);
+
+    /*for(int i=0;i<10;i++){
+
+        routes=performMove2(routes);
+        printRoutes(routes);
+        cout<<endl<<endl;
+    }
+     */
+
 
     //Wlaczanie kontrolnego wypisywania vectora
     //print_customersVector(customersVector);
@@ -493,7 +515,7 @@ int main(int argc, char *argv[]) {
 
     //printf("%lu %0.5f\n", routes.size(), sum);
 
-    printRoutes(routes);
+    //printRoutes(routes);
 
     //if (outFileName != nullptr)
     //   save(outFileName, routes);
