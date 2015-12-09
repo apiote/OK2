@@ -272,8 +272,15 @@ return routes;
 
 
 vector<Route> performMove1(vector<Route> routes){
+	uniform_int_distribution<int> irand(0,routes.size()-1);
+	int r = irand(rng);
+	
+	uniform_int_distribution<int> krand(1,routes.at(r).route.size()-2);
+	int k=krand(rng);
+    int l=krand(rng);
 
-    return routes;
+	swap(routes.at(r).route.at(k), routes.at(r).route.at(l));
+	return routes;
 }
 
 vector<Route> performMove2(vector<Route> routes){
@@ -311,10 +318,21 @@ vector<Route> performMove4(vector<Route> routes){
 
 //Stworzenie nowych drog przez wykonanie jednej ze zmian
 vector<Route> performMoves(vector<Route> routes){
-
-
-    routes=performMove2(routes);
-    return routes;
+	uniform_int_distribution<int> irand(1, 2); //1, 4
+	int r = irand(rng);
+	
+	switch(r){
+		case 1:
+			return performMove1(routes);
+		case 2:
+			return preformMove2(routes);
+		case 3:
+			return performMove3(routes);
+		case 4:
+			return performMove4(routes);
+		default:
+			throw -1;
+	}
 }
 
 double routesDistance(vector<Route> routes){
