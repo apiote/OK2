@@ -8,8 +8,8 @@
 #include <unordered_map>
 #include <iomanip>
 #include <cstring>
-#include <stdlib.h>
-#include <time.h>
+#include <cstdlib>
+#include <ctime>
 #include <random>
 
 using namespace std;
@@ -277,32 +277,31 @@ return routes;
 
 
 vector<Route> performMove1(vector<Route> routes){
+
+
 	uniform_int_distribution<int> irand(0,routes.size()-1);
 	int r = irand(rng);
 	
 	uniform_int_distribution<int> krand(1,routes.at(r).route.size()-2);
 	int k=krand(rng);
     int l=krand(rng);
-
 	swap(routes.at(r).route.at(k), routes.at(r).route.at(l));
 	return routes;
 }
 
 vector<Route> performMove2(vector<Route> routes){
-
-
-
+	if(routes.size()==1) return routes;
     uniform_int_distribution<int> irand(0,routes.size()-1);
-
-
 
     int i = irand(rng);
 
+    uniform_int_distribution<int> jrand(0,routes.size()-2);
+
     //cout<<"TUTAJ"<<endl;
-    int j = irand(rng);
+    int j = jrand(rng);
+	if(i>=j) ++j;
 
     //cout<<i<<" "<<j<<endl;
-
 
     uniform_int_distribution<int> krand(1,routes.at(i).route.size()-2);
     int k=krand(rng);
@@ -310,8 +309,6 @@ vector<Route> performMove2(vector<Route> routes){
 
     uniform_int_distribution<int> lrand(1,routes.at(j).route.size()-2);
     int l=lrand(rng);
-
-
 
     routes.at(i).route.insert(routes.at(i).route.begin()+k,routes.at(j).route.at(l));
     routes.at(j).route.erase(routes.at(j).route.begin()+l);
@@ -323,6 +320,8 @@ vector<Route> performMove2(vector<Route> routes){
 }
 
 vector<Route> performMove3(vector<Route> routes){
+	if(routes.size()==1) return routes;	
+
 	int S=1000000;
 	int At=-1;
 	int i=0;
@@ -331,12 +330,11 @@ vector<Route> performMove3(vector<Route> routes){
 		if(s<S){ S=s; At=i; }
 		++i;
 	}
-	uniform_int_distribution<int> irand(0,routes.size()-1);
-    int p = irand(rng);
-	if(p==At){
-		uniform_int_distribution<int> jrand(0, 1);
-		int k = jrand(rng);
-		p+=(2*k)-1;
+
+	uniform_int_distribution<int> irand(0,routes.size()-2);
+	int p = irand(rng);
+	if(p>=At){
+		++p;
 	}
 	
 	uniform_int_distribution<int> krand(1,routes.at(At).route.size()-2);
@@ -345,21 +343,16 @@ vector<Route> performMove3(vector<Route> routes){
 
     uniform_int_distribution<int> lrand(1,routes.at(p).route.size()-2);
     int k=lrand(rng);
-
-
-
+	
     routes.at(p).route.insert(routes.at(p).route.begin()+k,routes.at(At).route.at(l));
     routes.at(At).route.erase(routes.at(At).route.begin()+l);
-
+	
     if(routes.at(At).route.front().id==0 && routes.at(At).route.back().id==0 && routes.at(At).route.size()==2)
         routes.erase(routes.begin()+At);
-
-
     return routes;
 }
 
 vector<Route> performMove4(vector<Route> routes){
-
     return routes;
 }
 
@@ -411,8 +404,8 @@ bool decision(double currentDistance, double tempDistance, double temperature){
     random=(rand()%101)/100.00;
     prob=1.0/(exp((((tempDistance-currentDistance)*25))/(currentDistance*temperature)));
 
-    cout<<random<<endl;
-    cout<<prob<<endl<<endl;
+    //cout<<random<<endl;
+    //cout<<prob<<endl<<endl;
 
     if(prob>random){
         doItOrNot=true;
@@ -424,6 +417,7 @@ bool decision(double currentDistance, double tempDistance, double temperature){
 
 vector<Route> performAnnealing(vector<Route> routes, double startTemperature, double endTemperature, double coolingFactor, int innerIterations, vector<Route> bestRoutes){
 
+	srand(time(0));
     double temperature=startTemperature;
     vector<Route> tempRoutes;
 
