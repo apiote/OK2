@@ -40,10 +40,6 @@ public:
 class Route {
 public:
     vector<Customer> route;
-    /*int idL, idR;
-    double len;
-    int time;
-    int cap;*/
 };
 
 //Zmienne globalne
@@ -89,9 +85,6 @@ void data_input(char *filename) {
 
     file >> vehiclesNumber >> vehiclesCapacity;
 
-    //Wlaczenie wypisywania kontrolnego liczby ciezarowek i ich ladownosci
-    //printf("%d %d\n", vehiclesNumber,vehiclesCapacity);
-
     //Omijanie kolejnych linii bez danych
     for (int i = 0; i < 4; i++)
         getline(file, truncLine);
@@ -123,9 +116,6 @@ void data_input_n(char *filename, char *data_quantity) {
         getline(file, truncLine);
 
     file >> vehiclesNumber >> vehiclesCapacity;
-
-    //Wlaczenie wypisywania kontrolnego liczby ciezarowek i ich ladownosci
-    //printf("%d %d\n", vehiclesNumber,vehiclesCapacity);
 
     //Omijanie kolejnych linii bez danych
     for (int i = 0; i < 4; i++)
@@ -237,8 +227,6 @@ vector<Route> createNaiveRoutes(){
         tempRoute.route.clear();
     }
 
-    //printRoutes(routes);
-
     bool removed[routes.size()];
     for(int i=0;i<routes.size();i++)
         removed[i]=false;
@@ -261,16 +249,12 @@ vector<Route> createNaiveRoutes(){
 
     //Usuwanie drog zawierajacych uzyte wierzcholki
     for(int j=routes.size()-1;j>=0;j--) {
-        //printRoute(routes.at(j));
        if (removed[j]) {
             routes.erase(routes.begin() + j);
            }
     }
 
-    //printRoutes(routes);
-
-
-return routes;
+	return routes;
 
 }
 
@@ -297,11 +281,8 @@ vector<Route> performMove2(vector<Route> routes){
 
     uniform_int_distribution<int> jrand(0,routes.size()-2);
 
-    //cout<<"TUTAJ"<<endl;
     int j = jrand(rng);
 	if(i>=j) ++j;
-
-    //cout<<i<<" "<<j<<endl;
 
     uniform_int_distribution<int> krand(1,routes.at(i).route.size()-2);
     int k=krand(rng);
@@ -352,13 +333,9 @@ vector<Route> performMove3(vector<Route> routes){
     return routes;
 }
 
-vector<Route> performMove4(vector<Route> routes){
-    return routes;
-}
-
 //Stworzenie nowych drog przez wykonanie jednej ze zmian
 vector<Route> performMoves(vector<Route> routes){
-	uniform_int_distribution<int> irand(1, 3); //1, 4
+	uniform_int_distribution<int> irand(1, 3);
 	int r = irand(rng);
 	
 	switch(r){
@@ -368,8 +345,6 @@ vector<Route> performMoves(vector<Route> routes){
 			return performMove2(routes);
 		case 3:
 			return performMove3(routes);
-		case 4:
-			return performMove4(routes);
 		default:
 			throw -1;
 	}
@@ -404,14 +379,11 @@ bool decision(double currentDistance, double tempDistance, double temperature){
     random=(rand()%101)/100.00;
     prob=1.0/(exp((((tempDistance-currentDistance)*25))/(currentDistance*temperature)));
 
-    //cout<<random<<endl;
-    //cout<<prob<<endl<<endl;
-
     if(prob>random){
         doItOrNot=true;
     }
 
-    return doItOrNot; // just do it!
+    return doItOrNot;
 }
 
 
@@ -490,10 +462,6 @@ void save(char *name, vector<Route> routes) {
 }
 
 int main(int argc, char *argv[]) {
-
-    srand (time(NULL));
-    //random_device rd;
-
     //Domyslna nazwa pliku wynikowego
     string defaultOutFileName="wynik.txt";
     char *cdefaultOutFileName = new char[defaultOutFileName.length() + 1];
@@ -535,28 +503,7 @@ int main(int argc, char *argv[]) {
 
     bestRoutes=routes;
 
-    /*printRoutes(routes);
-
-
-    cout<<endl<<endl;*/
-
-
     routes=performAnnealing(routes, 0.8, 0.01, 0.995, 60,bestRoutes);
-
-
-
-    /*for(int i=0;i<10;i++){
-
-        routes=performMove2(routes);
-        printRoutes(routes);
-        cout<<endl<<endl;
-    }
-     */
-
-
-    //Wlaczanie kontrolnego wypisywania vectora
-    //print_customersVector(customersVector);
-
 
     try {
         for (auto i: routes){
@@ -577,16 +524,28 @@ int main(int argc, char *argv[]) {
         sum += isConnectionFeasible(i);
     }
 
+	save(outFileName, routes);
 
-    //Wyswietlanie wynikow dzialania algorytmu na stdout
+if (routes.empty())
+        cout << "-1\n";
+    else {
+        double sum = 0;
+        for (auto i: routes) {
+            sum += isConnectionFeasible(i);
+        }
+        cout<<routes.size()<<" "<< fixed << setprecision(5)<<sum<<endl;
 
-    //printf("%lu %0.5f\n", routes.size(), sum);
+        if (routes.empty())
+            cout << "-1";
+        for (auto route:routes) {
+            vector<Customer> r = route.route;
+            for (unsigned long i = 1; i < r.size() - 1; ++i) {
+                cout<<r.at(i).id<<" ";
+            }
+            cout<<endl;
+        }
+    }
 
-    //printRoutes(routes);
-
-    //if (outFileName != nullptr)
-       save(outFileName, routes);
-
-
+	
     return 0;
 }
